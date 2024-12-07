@@ -3,24 +3,27 @@ const db = require('../models');
 const Schedule = db.schedule;
 
 exports.create = async (req, res) => {
-    const { summary, date, startTime, endTime, buildingId, resourceId, createdBy } = req.body;
+    const { summary, date, startTime, endTime, buildingId, roomId, createdBy, color, organizer } = req.body;
 
-    // Kiểm tra thông tin đầu vào
-    if (!summary || !date || !startTime || !endTime || !buildingId) {
-        return res.status(400).json({ error: 'Summary, date, buildingId, startTime, and endTime are required' });
+    // Check required fields
+    if (!summary || !date || !startTime || !endTime || !buildingId || !roomId || !color || !organizer) {
+        return res.status(400).json({ error: 'Summary, date, roomId, buildingId, startTime, endTime, and color are required' });
     }
 
     try {
-        // Tạo schedule mới
+        // Create new schedule with default status
         const newSchedule = await Schedule.create({
             summary,
             date,
             startTime,
+            organizer,
             endTime,
             buildingId,
-            resourceId,
+            roomId,
+            color,
             createdBy,
             updatedBy: createdBy,
+            status: 'waiting',  // Default status
         });
 
         res.status(201).json({ message: 'Schedule created successfully', schedule: newSchedule });
@@ -30,8 +33,9 @@ exports.create = async (req, res) => {
 };
 
 exports.findAll = async (req, res) => {
+    const { buildingId } = req.query;
     try {
-        const schedules = await Schedule.findAll({ where: { isDeleted: false } });
+        const schedules = await Schedule.findAll({ where: { isDeleted: false, buildingId: buildingId } });
         res.json(schedules);
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
@@ -56,7 +60,7 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const { id } = req.params;
-    const { summary, date, startTime, endTime, status, color, updatedBy } = req.body;
+    const { summary, date, startTime, endTime, color, updatedBy } = req.body;
 
     try {
         const schedule = await Schedule.findByPk(id);
@@ -65,13 +69,12 @@ exports.update = async (req, res) => {
             return res.status(404).json({ error: 'Schedule not found' });
         }
 
-        // Chỉ cho phép cập nhật các trường khác, không cho phép thay đổi buildingId
+        // Only allow updating fields other than buildingId
         await schedule.update({
             summary,
             date,
             startTime,
             endTime,
-            status,
             color,
             updatedBy,
         });
@@ -92,10 +95,47 @@ exports.delete = async (req, res) => {
             return res.status(404).json({ error: 'Schedule not found' });
         }
 
-        // Đánh dấu là đã xóa thay vì xóa thực tế
+        // Mark as deleted instead of actual deletion
         await schedule.update({ isDeleted: true });
 
         res.json({ message: 'Schedule deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// New method to get all schedules with status 'waiting'
+exports.getWaitingSchedules = async (req, res) => {
+    const { buildingId } = req.query;
+    try {
+        const waitingSchedules = await Schedule.findAll({
+            where: {
+                isDeleted: false,
+                status: 'waiting',
+                buildingId: buildingId,
+            },
+        });
+        res.json(waitingSchedules);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+exports.passWaitingSchedules = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const schedule = await Schedule.findByPk(id);
+
+        if (!schedule) {
+            return res.status(404).json({ error: 'Schedule not found' });
+        }
+
+        await schedule.update({
+            status: "live",
+        });
+
+        res.json({ message: 'Schedule updated successfully', schedule });
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }

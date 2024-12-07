@@ -112,6 +112,8 @@ exports.delete = async (req, res) => {
 
 exports.joinBuilding = async (req, res) => {
     const { inviteCode, updatedBy } = req.body;
+    console.log("🚀 ~ exports.joinBuilding= ~ updatedBy:", updatedBy)
+    console.log("🚀 ~ exports.joinBuilding= ~ inviteCode:", inviteCode)
 
     try {
         // Tìm building theo inviteCode
@@ -129,6 +131,7 @@ exports.joinBuilding = async (req, res) => {
 
         res.json({ message: 'User joined the building successfully', building });
     } catch (error) {
+        console.log("🚀 ~ exports.joinBuilding= ~ error:", error.message)
         res.status(500).json({ error: 'Server error' });
     }
 };

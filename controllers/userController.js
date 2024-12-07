@@ -13,9 +13,7 @@ exports.register = async (req, res) => {
 
     try {
         const existingUser = await User.findOne({
-            where: {
-                [Op.or]: [{ username }]
-            }
+            where: {username, isDeleted: false}
         });
 
         if (existingUser) {
@@ -23,16 +21,19 @@ exports.register = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        console.log("🚀 ~ exports.register= ~ hashedPassword:", hashedPassword, username, displayName, email)
 
         const newUser = await User.create({
             username,
             password: hashedPassword,
             email,
             displayName,
+            isDeleted: false,
         });
 
         res.status(201).json({ message: 'User registered successfully', userId: newUser.id });
     } catch (error) {
+        console.log("🚀 ~ exports.register= ~ error.message:", error.message)
         res.status(500).json({ error: 'Server error', errorMessage: error.message });
     }
 };
@@ -90,5 +91,21 @@ exports.getUserInfo = async (req, res) => {
     } catch (error) {
         console.log("🚀 ~ exports.getUserInfo= ~ error:", error);
         res.status(500).json({ error: 'Server error', errorMessage: error.message });
+    }
+};
+
+exports.getAllInBuilding = async (req, res) => {
+    const { buildingId } = req.query;
+    try {
+        const users = await User.findAll({
+            attributes: ['id', 'displayName'],  
+            where: {
+                isDeleted: false,
+                buildingId: buildingId,
+            },
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
 };
