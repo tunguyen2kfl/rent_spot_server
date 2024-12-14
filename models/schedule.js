@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       endTime: DataTypes.TIME,
       attendees: DataTypes.STRING,
       organizer: DataTypes.INTEGER,
+      description: DataTypes.STRING,
       createdBy: DataTypes.INTEGER,
       updatedBy: DataTypes.INTEGER,
       isDeleted: {
