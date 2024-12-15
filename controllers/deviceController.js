@@ -9,16 +9,15 @@ exports.create = async (req, res) => {
         const { name, description } = req.body;
         let image = null;
 
-        // Kiểm tra xem có tệp hình ảnh hay không
         if (req.file) {
-            image = `/uploads/${req.file.filename}`; // Đường dẫn đến hình ảnh
+            image = `/uploads/${req.file.filename}`; 
         }
 
         const device = await Device.create({
             name,
             description,
             image,
-            createdBy: req.user.id, // Giả sử bạn có thông tin người dùng trong req
+            createdBy: req.user.id,
         });
 
         res.status(201).json({ device });

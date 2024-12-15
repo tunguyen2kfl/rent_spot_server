@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const db = require('../models');
 const { Op } = require('sequelize');
 const User = db.user;
+const path = require("path");
+const fs = require("fs");
 
 exports.register = async (req, res) => {
     const { username, password, email, displayName } = req.body;
@@ -71,22 +73,22 @@ exports.getUserInfo = async (req, res) => {
     console.log("🚀 ~ exports.getUserInfo= ~ User ID from middleware:", userId);
 
     try {
-        // Lấy thông tin người dùng từ cơ sở dữ liệu
         const user = await User.findByPk(userId);
-        console.log("🚀 ~ exports.getUserInfo= ~ User found:", user);
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Trả về thông tin người dùng
         res.json({
             id: user.id,
             username: user.username,
             email: user.email,
             displayName: user.displayName,
             role: user.role,
-            buildingId: user.buildingId
+            buildingId: user.buildingId,
+            website: user.website,
+            phone: user.phone,
+            avatar: user.avatar
         });
     } catch (error) {
         console.log("🚀 ~ exports.getUserInfo= ~ error:", error);
@@ -109,3 +111,41 @@ exports.getAllInBuilding = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const { name, website, email, phone } = req.body;
+        console.log("🚀 ~ exports.updateProfile= ~ name, website, email, phone:", name, website, email, phone)
+        const user = await User.findByPk(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        let avatar = user.avatar; 
+
+        if (req.file) {
+            if (user.avatar) {
+                const oldImagePath = path.join(__dirname, "..", user.avatar);
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) console.error("Error deleting old image:", err);
+                });
+            }
+            avatar = `/uploads/${req.file.filename}`;
+        }
+
+        user.displayName = name;
+        user.website = website;
+        user.phone = phone;
+        user.email = email;
+        user.avatar = avatar;
+        user.updatedBy = req.user.id;
+
+        await user.save();
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.log("🚀 ~ exports.updateProfile= ~ error:", error)
+        res.status(500).json({ error: error.message });
+    }
+}
