@@ -5,7 +5,7 @@ const User = db.user;
 const Building = db.building;
 
 exports.create = async (req, res) => {
-    const { name, email, phone, website, inviteCode, createdBy } = req.body;
+    const { name, email, phone, website, address,inviteCode, createdBy } = req.body;
 
     // Kiểm tra thông tin đầu vào
     if (!name || !email || !phone) {
@@ -21,6 +21,7 @@ exports.create = async (req, res) => {
             phone,
             website,
             inviteCode,
+            address,
             createdBy,
             updatedBy: createdBy,
         });
@@ -66,7 +67,7 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const { id } = req.params;
-    const { name, email, phone, website, inviteCode, updatedBy } = req.body;
+    const { name, email, phone, website,address, inviteCode, updatedBy } = req.body;
 
     try {
         const building = await Building.findByPk(id);
@@ -82,6 +83,7 @@ exports.update = async (req, res) => {
             phone,
             website,
             inviteCode,
+            address,
             updatedBy,
         });
 

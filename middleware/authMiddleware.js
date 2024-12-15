@@ -21,11 +21,11 @@ exports.verifyToken = (req, res, next) => {
         req.user = decoded; 
 
         // Thêm createdBy và updatedBy vào body
-        req.body.createdBy = decoded.id; // Giả sử ID có trong decoded
-        req.body.updatedBy = decoded.id; // Giả sử ID có trong decoded
+        req.body.createdBy = decoded.id; 
+        req.body.updatedBy = decoded.id; 
 
         if (decoded.buildingId) {
-            req.body.buildingId = decoded.buildingId; // Thêm buildingId nếu có
+            req.body.buildingId = decoded.buildingId; 
         }
         next();
     } catch (error) {

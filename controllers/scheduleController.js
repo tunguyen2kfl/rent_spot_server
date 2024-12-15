@@ -1,16 +1,56 @@
 "use strict";
 const db = require('../models');
 const Schedule = db.schedule;
+const { Op } = require('sequelize');
 
 exports.create = async (req, res) => {
     const { summary, date, startTime, endTime, buildingId, roomId, createdBy, color, organizer, attendees, description } = req.body;
 
     // Check required fields
-    if (!summary || !date || !startTime || !endTime || !buildingId || !roomId || !color || !organizer) {
+    if (!summary || !date || !startTime || !endTime || !buildingId || !color || !organizer) {
         return res.status(400).json({ error: 'Summary, date, buildingId, startTime, endTime, color, and organizer are required' });
     }
 
     try {
+        // Extract the date part for comparison
+        const scheduleDate = new Date(date).toISOString().split('T')[0];
+        console.log("🚀 ~ exports.create= ~ scheduleDate:", scheduleDate)
+
+        // Check for existing confirmed schedules in the time range
+        const existingSchedules = await Schedule.findAll({
+            where: {
+                isDeleted: false,
+                buildingId: buildingId,
+                status: 'confirmed',
+                date: {
+                    [Op.gte]: new Date(scheduleDate + 'T00:00:00Z'), 
+                    [Op.lt]: new Date(scheduleDate + 'T23:59:59Z') 
+                },
+                [Op.or]: [
+                    {
+                        startTime: {
+                            [Op.lt]: endTime,
+                        },
+                        endTime: {
+                            [Op.gt]: startTime,
+                        },
+                    },
+                    {
+                        startTime: {
+                            [Op.gte]: startTime,
+                        },
+                        endTime: {
+                            [Op.lte]: endTime,
+                        },
+                    },
+                ],
+            },
+        });
+
+        if (existingSchedules.length > 0) {
+            return res.status(400).json({ error: 'A confirmed schedule already exists during the specified time.' });
+        }
+
         // Create new schedule with default status
         const newSchedule = await Schedule.create({
             summary,
@@ -18,7 +58,7 @@ exports.create = async (req, res) => {
             startTime,
             endTime,
             buildingId,
-            roomId, 
+            roomId,
             attendees,
             color,
             createdBy,
@@ -30,7 +70,7 @@ exports.create = async (req, res) => {
 
         res.status(201).json({ message: 'Schedule created successfully', schedule: newSchedule });
     } catch (error) {
-        console.log("🚀 ~ exports.create= ~ error:", error)
+        console.log("🚀 ~ exports.create= ~ error:", error);
         res.status(500).json({ error: 'Server error' });
     }
 };
@@ -50,7 +90,7 @@ exports.findAll = async (req, res) => {
         });
         res.json(schedules);
     } catch (error) {
-        console.log("🚀 ~ exports.findAll= ~ error:", error) 
+        console.log("🚀 ~ exports.findAll= ~ error:", error)
         res.status(500).json({ error: 'Server error' });
     }
 };
@@ -73,7 +113,7 @@ exports.findMySchedules = async (req, res) => {
         });
         res.json(schedules);
     } catch (error) {
-        console.log("🚀 ~ exports.findAll= ~ error:", error) 
+        console.log("🚀 ~ exports.findAll= ~ error:", error)
         res.status(500).json({ error: 'Server error' });
     }
 };
@@ -102,9 +142,47 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const { id } = req.params;
-    const { summary, date, startTime, endTime, color, description, attendees , roomId ,updatedBy } = req.body;
+    const { summary, date, startTime, endTime, color, description, buildingId, attendees, roomId, updatedBy } = req.body;
 
     try {
+        // Extract the date part for comparison
+        const scheduleDate = new Date(date).toISOString().split('T')[0];
+
+        // Check for existing confirmed schedules in the time range
+        const existingSchedules = await Schedule.findAll({
+            where: {
+                isDeleted: false,
+                buildingId: buildingId,
+                status: 'confirmed',
+                date: {
+                    [Op.gte]: new Date(scheduleDate + 'T00:00:00Z'), 
+                    [Op.lt]: new Date(scheduleDate + 'T23:59:59Z') 
+                },
+                [Op.or]: [
+                    {
+                        startTime: {
+                            [Op.lt]: endTime,
+                        },
+                        endTime: {
+                            [Op.gt]: startTime,
+                        },
+                    },
+                    {
+                        startTime: {
+                            [Op.gte]: startTime,
+                        },
+                        endTime: {
+                            [Op.lte]: endTime,
+                        },
+                    },
+                ],
+            },
+        });
+
+        if (existingSchedules.length > 0) {
+            return res.status(400).json({ error: 'A confirmed schedule already exists during the specified time.' });
+        }
+
         const schedule = await Schedule.findOne({
             where: {
                 id: id,
