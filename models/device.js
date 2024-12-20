@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       image: DataTypes.STRING,
+      buildingId: DataTypes.INTEGER,
       description: DataTypes.TEXT,
       createdBy: DataTypes.INTEGER,
       updatedBy: DataTypes.INTEGER,

@@ -34,7 +34,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/devices', deviceRoutes);
 // Sử dụng các routes khác
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 7040;
 
 const startServer = async () => {
     app.listen(PORT, '127.0.0.1', () => {

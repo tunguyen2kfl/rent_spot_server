@@ -22,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
       startTime: DataTypes.TIME,
       endTime: DataTypes.TIME,
       attendees: DataTypes.STRING,
+      sequence: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
       organizer: DataTypes.INTEGER,
       description: DataTypes.STRING,
       createdBy: DataTypes.INTEGER,

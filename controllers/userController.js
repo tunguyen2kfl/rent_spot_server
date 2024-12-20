@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../models');
 const { Op } = require('sequelize');
 const User = db.user;
+const Schedule = db.schedule;
 const path = require("path");
 const fs = require("fs");
 
@@ -100,14 +101,52 @@ exports.getAllInBuilding = async (req, res) => {
     const { buildingId } = req.query;
     try {
         const users = await User.findAll({
-            attributes: ['id', 'displayName'],  
+            attributes: ['id', 'displayName', 'avatar', 'email'],  
             where: {
                 isDeleted: false,
+                role: 'user',
                 buildingId: buildingId,
             },
         });
         res.json(users);
     } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+exports.removeUserFromBuilding = async (req, res) => {
+    const { buildingId } = req.query;
+    const { userId } = req.params;
+
+    try {
+        const user = await User.findOne({
+            where: {
+                id: userId,
+                buildingId: buildingId,
+                role: 'user',
+                isDeleted: false,
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        await user.update({
+            role: null,
+            buildingId: null,
+        });
+
+        await Schedule.destroy({
+            where: {
+                organizer: userId,
+            },
+        });
+
+        console.log("🚀 ~ exports.removeUserFromBuilding= ~ User removed from building and schedules deleted successfully:")
+        res.json({ message: 'User removed from building and schedules deleted successfully' });
+    } catch (error) {
+        console.log("🚀 ~ exports.removeUserFromBuilding= ~ error:", error);
         res.status(500).json({ error: 'Server error' });
     }
 };
