@@ -4,6 +4,7 @@ const userRoutes = require('./routes/userRoutes');
 const buildingRoutes = require('./routes/buildingRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const deviceRoutes = require('./routes/deviceRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes')
 const { verifyToken } = require('./middleware/authMiddleware');
 const bearerToken = require('express-bearer-token');
 const bodyParser = require('body-parser');
@@ -27,12 +28,13 @@ app.use(verifyToken);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/users', userRoutes);
+app.use('/api/schedules', scheduleRoutes);
 app.use('/api/buildings', buildingRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/devices', deviceRoutes);
 // Sử dụng các routes khác
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 7040;
 
 const startServer = async () => {
     app.listen(PORT, '127.0.0.1', () => {

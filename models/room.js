@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       buildingId: DataTypes.INTEGER,
       status: DataTypes.STRING,
+      devices: DataTypes.STRING,
       description: DataTypes.STRING,
       createdBy: DataTypes.INTEGER,
       updatedBy: DataTypes.INTEGER,

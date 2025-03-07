@@ -5,20 +5,21 @@ const path = require("path");
 const fs = require("fs");
 
 exports.create = async (req, res) => {
+    const { buildingId } = req.query;
     try {
         const { name, description } = req.body;
         let image = null;
 
-        // Kiểm tra xem có tệp hình ảnh hay không
         if (req.file) {
-            image = `/uploads/${req.file.filename}`; // Đường dẫn đến hình ảnh
+            image = `/uploads/${req.file.filename}`; 
         }
 
         const device = await Device.create({
             name,
             description,
+            buildingId,
             image,
-            createdBy: req.user.id, // Giả sử bạn có thông tin người dùng trong req
+            createdBy: req.user.id,
         });
 
         res.status(201).json({ device });
@@ -29,8 +30,12 @@ exports.create = async (req, res) => {
 
 // Lấy tất cả thiết bị
 exports.getAll = async (req, res) => {
+    const { buildingId } = req.query;
+    if (!buildingId) {
+        return res.status(400).json({ error: 'buildingId is required' });
+    }
     try {
-        const devices = await Device.findAll({ where: { isDeleted: false } });
+        const devices = await Device.findAll({ where: { isDeleted: false, buildingId: buildingId } });
         res.status(200).json(devices);
     } catch (error) {
         res.status(500).json({ error: error.message });

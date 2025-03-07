@@ -68,7 +68,7 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const { id } = req.params;
-    const { name, isOpen, status, description, updatedBy } = req.body;
+    const { name, isOpen, status, description,devices, updatedBy } = req.body;
 
     try {
         const room = await Room.findByPk(id);
@@ -77,8 +77,8 @@ exports.update = async (req, res) => {
             return res.status(404).json({ error: 'Room not found' });
         }
 
-        // Chỉ cho phép cập nhật các trường khác, không cho phép thay đổi buildingId
         await room.update({
+            devices,
             name,
             isOpen,
             status,
