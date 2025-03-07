@@ -163,6 +163,7 @@ exports.update = async (req, res) => {
         const newAttendees = attendees.split(',');
         const addedAttendees = newAttendees.filter(email => !oldAttendees.includes(email));
         const removedAttendees = oldAttendees.filter(email => !newAttendees.includes(email));
+        const newSequence = schedule.sequence + 1
 
         // Update the schedule
         await schedule.update({
@@ -175,6 +176,7 @@ exports.update = async (req, res) => {
             attendees,
             roomId,
             updatedBy,
+            sequence: newSequence
         });
 
         if (schedule.status !== "pending") {
@@ -197,6 +199,7 @@ exports.update = async (req, res) => {
             // Generate iCal content for existing attendees
             if (oldAttendees.length > 0) {
                 const contentUpdate = await icalGenerate(oldAttendees, 'update', schedule);
+                console.log("🚀 ~ exports.update= ~ contentUpdate:", contentUpdate)
                 // Send update email to existing attendees
                 sendNewReservationEmail(oldAttendees, contentUpdate, schedule, 'update');
                 // await sendMail(mailOptions);
@@ -289,6 +292,7 @@ exports.passWaitingSchedules = async (req, res) => {
         if (schedule.attendees && schedule.attendees.length > 0) {
             // Generate iCal content
             const content = await icalGenerate(schedule.attendees.split(','), 'create', schedule);
+            console.log("🚀 ~ exports.passWaitingSchedules= ~ content:", content)
 
             // Send email for new reservation
             sendNewReservationEmail(schedule.attendees.split(','), content, schedule, 'create');

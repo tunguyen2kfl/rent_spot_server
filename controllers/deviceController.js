@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 
 exports.create = async (req, res) => {
+    const { buildingId } = req.query;
     try {
         const { name, description } = req.body;
         let image = null;
@@ -16,6 +17,7 @@ exports.create = async (req, res) => {
         const device = await Device.create({
             name,
             description,
+            buildingId,
             image,
             createdBy: req.user.id,
         });
@@ -28,8 +30,12 @@ exports.create = async (req, res) => {
 
 // Lấy tất cả thiết bị
 exports.getAll = async (req, res) => {
+    const { buildingId } = req.query;
+    if (!buildingId) {
+        return res.status(400).json({ error: 'buildingId is required' });
+    }
     try {
-        const devices = await Device.findAll({ where: { isDeleted: false } });
+        const devices = await Device.findAll({ where: { isDeleted: false, buildingId: buildingId } });
         res.status(200).json(devices);
     } catch (error) {
         res.status(500).json({ error: error.message });
